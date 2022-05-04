@@ -1,0 +1,161 @@
+module Library where
+import PdePreludat
+
+data Persona = UnaPersona{
+    nombre :: String,
+    edad :: Number,
+    estres :: Number,
+    preferencias :: [String],
+    amigues :: [String]
+}deriving Show
+
+-- PUNTO 1
+tamanoAmigos :: Persona -> Number
+tamanoAmigos (UnaPersona _ _ _ _ amigues) = length amigues 
+
+puntosScoring :: Persona -> Number
+puntosScoring persona  
+    | even (tamanoAmigos persona) = (estres persona) * (edad persona)
+    | edad persona > 40 = (tamanoAmigos persona) * (edad persona)
+    |otherwise = length (nombre persona) * 2 
+
+-- PERSONAS PARA PRUEBA DE SCORING
+personaScoring1 = UnaPersona "ScoringUno" 25 10 [] ["Pedro", "Lucio"]
+personaScoring2 = UnaPersona "ScoringDos" 41 70 [] ["Juana"]
+personaScoring3 = UnaPersona "Rigoberta" 31 70 [] ["Matias"]
+
+-- PUNTO 2
+-- PARTE A
+nombreFirme :: Persona -> Bool
+nombreFirme persona
+    | head (nombre persona) == 'P' = True
+    | otherwise = False
+
+personaNombreFirme1 = UnaPersona "Paulina" 31 70 [] ["Matias"]
+personaNombreFirme2 = UnaPersona "Rigoberta" 31 70 [] ["Matias"]
+
+-- PARTE B
+personaInteresante :: Persona -> Bool
+personaInteresante persona
+    | length (amigues persona) >= 2 = True
+    | otherwise = False
+
+personaInteresante1 = UnaPersona "Paulina" 31 70 [] ["Matias"]
+personaInteresante2 = UnaPersona "Rigoberta" 31 70 [] ["Matias", "Cristian"]
+
+--PUNTO 3
+data Destino = UnDestino{
+    lugar :: String,
+    mes :: Number,
+    plata :: Bool
+}deriving Show
+
+bajarEstresHasta20 :: Number -> Number -> Number
+bajarEstresHasta20 estre edad
+    | (edad < 20 && estre - edad > 0) = estre - edad
+    | (edad > 20 && estre - 20 > 0)= estre - 20
+    | otherwise = 0
+
+-- Funciones según destino
+viajaMardel :: Persona -> Destino -> Persona
+viajaMardel (UnaPersona nombre edad estres preferencias amigues) destinito 
+    | (mes destinito == 1 || mes destinito == 2) = (UnaPersona nombre edad (estres + 10) preferencias amigues)
+    | otherwise = (UnaPersona nombre edad (bajarEstresHasta20 estres edad) preferencias amigues)
+
+viajaLasToninas :: Persona -> Destino -> Persona
+viajaLasToninas persona destinito 
+    | plata destinito == True = UnaPersona (nombre persona) (edad persona) (estres persona / 2) (preferencias persona) (amigues persona)
+    | plata destinito == False = UnaPersona (nombre persona) (edad persona) (bajarEstresHasta20 (estres persona) (edad persona)) (preferencias persona) (amigues persona)
+
+viajaPuertoMadryn :: Persona -> Destino -> Persona
+viajaPuertoMadryn persona destinito = UnaPersona (nombre persona) (edad persona) (0) (preferencias persona) ("Juan":amigues persona)
+
+viajaLaAdela :: Persona -> Destino -> Persona
+viajaLaAdela persona destinito = persona
+
+-- Viajeros
+viajero1 = UnaPersona "Viajero 1" 31 20 [] ["Matias", "Cristian"]
+destinoViajero1 = UnDestino "Mar del Plata" 1 True
+
+viajero2 = UnaPersona "Viajero 2" 18 50 [] ["Matias", "Cristian"]
+destinoViajero2 = UnDestino "Mar del Plata" 3 False
+
+viajero3 = UnaPersona "Viajero 3" 18 15 [] ["Matias", "Cristian"]
+destinoViajero3 = UnDestino "Mar del Plata" 3 False
+
+viajero4 = UnaPersona "Viajero 4" 45 50 [] ["Matias", "Cristian"]
+destinoViajero4 = UnDestino "Mar del Plata" 3 False
+
+viajero5 = UnaPersona "Viajero 5" 45 75 [] ["Matias", "Cristian"]
+destinoViajero5 = UnDestino "Las Toninas" 3 True
+
+viajero6 = UnaPersona "Viajero 6" 45 75 [] ["Matias", "Cristian"]
+destinoViajero6 = UnDestino "Las Toninas" 3 False
+
+juan = UnaPersona{nombre = "Juan", edad = 37, estres = 80, preferencias = [], amigues = []}
+
+viajero7 = UnaPersona "Viajero 7" 40 75 [] []
+destinoViajero7 = UnDestino "Puerto Madryn" 3 False
+
+viajero8 = UnaPersona "Viajero 8" 40 80 [] []
+destinoViajero8 = UnDestino "La Adela" 3 False
+
+-- Función para hacer las pruebas (viaje viajeroX destinoViajeroX)
+viaje :: Persona -> Destino -> Persona
+viaje persona destino 
+ | lugar destino == "Mar del Plata" = viajaMardel persona destino
+ | lugar destino == "Las Toninas" = viajaLasToninas persona destino
+ | lugar destino == "Puerto Madryn" = viajaPuertoMadryn persona destino
+ | lugar destino == "La Adela" = viajaLaAdela persona destino
+
+
+-- PUNTO 4 (Falta lo del estres deseado en "Enchufarse")
+cumplePreferencia :: Persona -> Destino -> Bool
+cumplePreferencia persona destino
+    | head(preferencias persona) == "Desenchufarse" = estres persona > estres (viaje persona destino)
+    | head(preferencias persona) == "Enchufarse" = estres (viaje persona destino) == 20
+    | head(preferencias persona) == "Socializar" = length (amigues (viaje persona destino)) > length (amigues persona)
+    | head(preferencias persona) == "Sin Pretensiones" = True
+
+viajero9 = UnaPersona "Viajero 9" 40 80 ["Desenchufarse"] []
+destinoViajero9 = UnDestino "Mar del Plata" 1 False
+viajero10 = UnaPersona "Viajero 10" 40 80 ["Desenchufarse", "20"] []
+destinoViajero10 = UnDestino "Mar del Plata" 3 False
+viajero11 = UnaPersona "Viajero 11" 21 40 ["Enchufarse", "20"] []
+destinoViajero11 = UnDestino "Mar del Plata" 3 False
+viajero12 = UnaPersona "Viajero 12" 40 45 ["Enchufarse"] []
+destinoViajero12 = UnDestino "Mar del Plata" 3 False
+viajero13 = UnaPersona "Viajero 13" 40 80 ["Socializar"] []
+destinoViajero13 = UnDestino "Puerto Madryn" 3 False
+viajero14 = UnaPersona "Viajero 14" 40 80 ["Socializar"] []
+destinoViajero14 = UnDestino "La Adela" 3 False
+viajero15 = UnaPersona "Viajero 15" 40 80 ["Sin Pretensiones"] []
+destinoViajero15 = UnDestino "La Adela" 3 False
+
+-- PUNTO 5 A
+destinoApto :: Persona -> Persona -> Destino -> Bool
+destinoApto persona1 persona2 destino
+    | cumplePreferencia persona1 destino && cumplePreferencia persona2 destino = True
+    | otherwise = False
+
+-- Contingente 1
+viajeroC1_1 = UnaPersona "Ariel" 21 45 ["Desenchufarse", "Socializar"] []
+viajeroC1_2 = UnaPersona "Pedro" 38 50 ["Sin Pretensiones"] []
+destinoC1 = UnDestino "Mar del Plata" 3 False
+
+-- Contingente 2
+viajeroC2_1 = UnaPersona "Carola" 21 45 ["Socializar"] []
+viajeroC2_2 = UnaPersona "Pedro" 38 50 ["Enchufarse", "10"] []
+destinoC2 = UnDestino "Mar del Plata" 3 False
+
+-- PUNTO 5 B
+destinoPiola :: Persona -> Persona -> Destino -> Bool
+destinoPiola persona1 persona2 destino
+    | (estres (viaje persona1 destino)) + (estres (viaje persona2 destino)) < 100 = True
+    | otherwise = False
+
+-- Contingente
+viajeroC1 = UnaPersona "Carola" 21 45 ["Socializar"] []
+viajeroC2 = UnaPersona "Pedro" 38 35 ["Enchufarse", "10"] []
+destinoo = UnDestino "Mar del Plata" 3 False
+destinoo2 = UnDestino "Mar del Plata" 1 False
